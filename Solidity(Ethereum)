@@ -1,0 +1,100 @@
+pragma solidity ^0.4.24;
+
+import "https://github.com/smartcontractkit/chainlink/blob/develop/evm/contracts/ChainlinkClient.sol";
+import "https://github.com/smartcontractkit/chainlink/blob/develop/evm/contracts/vendor/Ownable.sol";
+
+contract AutoTriage is ChainlinkClient, Ownable{
+   
+    address AuthorizedCreator;
+     constructor() public{
+        AuthorizedCreator == msg.sender;
+    }
+    uint256 constant private ORACLE_PAYMENT = 1 * LINK;
+    uint EvidenceId;
+    string EvidenceDescription;
+    string EvidenceHash;
+    string TriageApp;
+    string TriageHash;
+    uint CollectingTime;
+    uint UTC;
+    string Examiner;
+    address Owner;
+    bool Active;
+
+    mapping(uint => mapping(uint => Evidence)) Case;
+    struct Evidence{
+        uint EvidenceId;
+        string EvidenceDescription;
+        string EvidenceHash;
+        string TriageApp;
+        string TriageHash;
+        uint CollectingTime;
+        uint UTC;
+        string Examiner;
+        address Owner;
+        bool Active;
+    } 
+   // address[] 歷史擁有者 Owner;
+    //modifier
+    //event SetCase
+   
+    modifier AuthorizedCreate() {
+        require(msg.sender == AuthorizedCreator ,"NEED TO BE AUTHORIZED");
+        _;
+    }
+    //是否有這CASE
+    function isCase(uint pCaseid) internal view returns (bool){
+        return Case[pCaseid];
+    }
+    //是否有這Evidence
+    function isEvidence(uint pCaseid, uint pEvidenceid) internal view returns (bool){
+        return  Case[pCaseid].Evidence[pEvidenceid];
+    }
+    
+    //event
+    //創造case時發出
+    event LogCreatecase(uint CaseId, string CaseDescription, bool Active);
+    //創造證物時發出
+    event LogCreateEvidence(uint EvidenceId,string EvidenceHash, string TriageLog, string EvidenceDescription, uint CollectingTime, string Collector, uint TransferTime, address Creator, address CurrentOwner);
+    //更新證物訊息時發出(chainlink)--待修改
+    event LogTransferEvidence(address CurrentOwner);
+    
+    event RequestInformationFulfilled(
+    bytes32 indexed requestId,
+    uint256 indexed price
+  );
+    //chainlink
+    constructor() public Ownable() {
+    setPublicChainlinkToken();
+    }
+
+    //創造Case並發出event
+    function CreateCase(unit _CaseId) internal  Owner{
+        
+        emit LogCreatecase()
+    }
+        
+    
+    //創建證物並PUSH進case-並發出event
+    function CreateEvidence(uint pCaseid, uint pEvidenceid) AuthorizedCreate{
+        if (!Case[pCaseid].Evidence[pEvidenceid]){
+            Case[pCaseid].Evidence[pEvidenceid] = true;
+            
+        }
+        emit LogCreateEvidence()
+    }
+
+    //使用chainlink取得證物資料
+    function FetchinEvidenceinformation() AuthorizedCreate{
+        
+        emit LogTransferEvidence()
+    }
+    
+    //使用chainlink更新相關數據及擁有者狀態
+    
+}
+   
+//payable-event
+//constructor 初始
+//public-cases-evidences
+//一般證物?
