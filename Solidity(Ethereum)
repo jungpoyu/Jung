@@ -10,6 +10,7 @@ contract AutoTriage is ChainlinkClient, Ownable{
         AuthorizedCreator == msg.sender;
     }
     uint256 constant private ORACLE_PAYMENT = 1 * LINK;
+
     uint EvidenceId;
     string EvidenceDescription;
     string EvidenceHash;
@@ -29,7 +30,7 @@ contract AutoTriage is ChainlinkClient, Ownable{
         string TriageApp;
         string TriageHash;
         uint CollectingTime;
-        uint UTC;
+        uint GMT;
         string Examiner;
         address Owner;
         bool Active;
@@ -84,6 +85,62 @@ contract AutoTriage is ChainlinkClient, Ownable{
         emit LogCreateEvidence()
     }
 
+  function requestEthereumLastMarket(address _oracle, string _jobId)
+    public
+    onlyOwner
+  {
+    Chainlink.Request memory req = buildChainlinkRequest(stringToBytes32(_jobId), this, this.fulfillEthereumLastMarket.selector);
+    req.add("get", "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=ETH&tsyms=USD");
+    string[] memory path = new string[](4);
+    path[0] = "RAW";
+    path[1] = "ETH";
+    path[2] = "USD";
+    path[3] = "LASTMARKET";
+    req.addStringArray("path", path);
+    sendChainlinkRequestTo(_oracle, req, ORACLE_PAYMENT);
+  }
+
+  
+  function fulfillEthereumLastMarket(bytes32 _requestId, bytes32 _market)
+    public
+    recordChainlinkFulfillment(_requestId)
+  {
+    emit RequestEthereumLastMarket(_requestId, _market);
+    lastMarket = _market;
+  }
+
+  function getChainlinkToken() public view returns (address) {
+    return chainlinkTokenAddress();
+  }
+
+  function withdrawLink() public onlyOwner {
+    LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
+    require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
+  }
+
+  function cancelRequest(
+    bytes32 _requestId,
+    uint256 _payment,
+    bytes4 _callbackFunctionId,
+    uint256 _expiration
+  )
+    public
+    onlyOwner
+  {
+    cancelChainlinkRequest(_requestId, _payment, _callbackFunctionId, _expiration);
+  }
+
+  function stringToBytes32(string memory source) private pure returns (bytes32 result) {
+    bytes memory tempEmptyStringTest = bytes(source);
+    if (tempEmptyStringTest.length == 0) {
+      return 0x0;
+    }
+
+    assembly { // solhint-disable-line no-inline-assembly
+      result := mload(add(source, 32))
+    }
+  }
+
     //使用chainlink取得證物資料
     function FetchinEvidenceinformation() AuthorizedCreate{
         
@@ -93,7 +150,7 @@ contract AutoTriage is ChainlinkClient, Ownable{
     //使用chainlink更新相關數據及擁有者狀態
     
 }
-   
+//使用modifier 區分不同權限level1（存取創造） level2(接收證物)
 //payable-event
 //constructor 初始
 //public-cases-evidences
