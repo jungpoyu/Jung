@@ -13,42 +13,20 @@ class ReportParser:
 
         self.soup = BeautifulSoup(data, "html.parser")
 
+    def _get_case_information(self, key):
+        return self.soup.find("td", text=key).find_next_sibling().find("div").text
+
     def get_investigator(self):
-        return (
-            self.soup.find("td", text="Investigator:")
-            .find_next_sibling()
-            .find("div")
-            .text
-        )
+        return self._get_case_information("Investigator:")
 
     def get_subject_name(self):
-        return (
-            self.soup.find("td", text="Subject name:")
-            .find_next_sibling()
-            .find("div")
-            .text
-        )
+        return self._get_case_information("Subject name:")
 
     def get_computer_name(self):
-        return (
-            self.soup.find("td", text="Computer name:")
-            .find_next_sibling()
-            .find("div")
-            .text
-        )
+        return self._get_case_information("Computer name:")
 
     def get_case_number(self):
-        return (
-            self.soup.find("td", text="Case number:")
-            .find_next_sibling()
-            .find("div")
-            .text
-        )
+        return self._get_case_information("Case number:")
 
     def get_search_timestamp(self):
-        return (
-            self.soup.find("td", text="Search timestamp:")
-            .find_next_sibling()
-            .find("div")
-            .text
-        )
+        return self._get_case_information("Search timestamp:")
