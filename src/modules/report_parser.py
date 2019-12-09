@@ -14,7 +14,9 @@ class ReportParser:
         self.soup = BeautifulSoup(data, "html.parser")
 
     def _get_case_information(self, key):
-        return self.soup.find("td", text=key).find_next_sibling().find("div").text
+        return (
+            self.soup.find("div", text=key).parent.find_next_sibling().find("div").text
+        )
 
     def get_investigator(self):
         return self._get_case_information("Investigator:")
