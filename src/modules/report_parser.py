@@ -44,3 +44,11 @@ class ReportParser:
             .find("div")
             .text
         )
+
+    def get_search_timestamp(self):
+        return (
+            self.soup.find("td", text="Search timestamp:")
+            .find_next_sibling()
+            .find("div")
+            .text
+        )
