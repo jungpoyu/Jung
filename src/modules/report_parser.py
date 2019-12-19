@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 CHUNK_SIZE = 4096
 
@@ -33,5 +34,18 @@ class ReportParser:
     def get_case_number(self):
         return self._get_case_information("Case number:")
 
+    def _get_datetime_obj(self):
+        datetime_str = self._get_case_information("Search timestamp:")
+
+        word_conversion = {"上午": "AM", "下午": "PM"}
+
+        for k, v in word_conversion.items():
+            datetime_str = datetime_str.replace(k, v)
+
+        return datetime.strptime(datetime_str, "%Y/%m/%d %p %I:%M:%S %z")
+
     def get_search_timestamp(self):
-        return self._get_case_information("Search timestamp:")
+        return self._get_datetime_obj().strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_time_zone(self):
+        return self._get_datetime_obj().tzinfo
