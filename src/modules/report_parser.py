@@ -13,6 +13,9 @@ class ReportParser:
 
         self.soup = BeautifulSoup(data, "html.parser")
 
+    def get_triage_program(self):
+        return self.soup.find("h1").text.rsplit(" ", 1)[0]
+
     def _get_case_information(self, key):
         return (
             self.soup.find("div", text=key).parent.find_next_sibling().find("div").text
