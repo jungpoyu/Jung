@@ -28,3 +28,41 @@ class ResultUploader:
         if bq_util.is_table_exist(self._dataset, self._table) == False:
             bq_util.try_create_table(self._dataset, self._table, self._schema)
             print(f'create table "{self._table}" under dataset "{self._dataset}"')
+
+    def _get_new_evidence_id(self, case_id):
+        sql = f'SELECT EvidenceID FROM {self._dataset}.{self._table} WHERE CaseID = "{case_id}" AND EvidenceType = "D"'
+        results = bq_util.execute_query(sql)
+
+        return max([row.EvidenceID for row in results], default=0) + 1
+
+    def upload_result(
+        self,
+        case_id,
+        perpetrator,
+        evidence_description,
+        investigator,
+        search_timestamp,
+        time_zone,
+        zip_hash,
+    ):
+        data = {
+            "CaseID": f"{case_id}",
+            "EvidenceType": "D",
+            "EvidenceID": self._get_new_evidence_id(case_id),
+            "SeizureLocation": "computer",
+            "Perpetrator": f"{perpetrator}",
+            "EvidenceDescription": f"{evidence_description}",
+            "EvidenceHash": "",
+            "Quantity": 1,
+            "Investigator": f"{investigator}",
+            "SearchTimestamp": f"{search_timestamp}",
+            "TimeZone": f"{time_zone}",
+            "ZipHash": f"{zip_hash}",
+            "IsTransferred": False,
+        }
+
+        columns = data.keys()
+        values = [f'"{v}"' if isinstance(v, str) else str(v) for v in data.values()]
+
+        sql = f"INSERT INTO {self._dataset}.{self._table} ({','.join(columns)}) VALUES ({','.join(values)})"
+        bq_util.execute_query(sql)
